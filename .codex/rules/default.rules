@@ -1,0 +1,98 @@
+# 기본 안전 설정 초안
+#
+# 확인된 로컬 환경
+# - OS: Microsoft Windows NT 10.0.26200.0
+# - shell/terminal: PowerShell 5.1.26100.8457
+# - project root: D:\02_교육\260616_AI_SW_Pipeline_1\codex_practice1
+# - git: available (`git.exe`), but `git status` reported "not a git repository" in this workspace
+# - node: available (`v24.16.0`)
+# - npm: available through `npm.cmd` (`11.13.0`); `npm.ps1` is blocked by PowerShell execution policy
+# - python: UNKNOWN (`python.exe` exists, but `python --version` failed and `py` is unavailable)
+#
+# 운영 원칙
+# - allow: 읽기/탐색 중심 명령은 자동 허용
+# - prompt: 작업 상태를 바꾸는 명령은 사전 확인
+# - forbidden: 삭제, 원격 푸시, `.env` 직접 읽기/출력은 차단
+#
+# 매핑 표
+# | decision | commands |
+# | allow | `git status`, `git diff`, `git show`, `git log`, `Get-ChildItem`, `Get-Content`, `rg` |
+# | prompt | `git add`, `git commit`, `git checkout`, `git switch`, `git merge`, `git rebase`, `npm install`, `npm run` |
+# | forbidden | `rm`, `rmdir`, `del`, `Remove-Item`, `git push`, `git remote add`, `git remote set-url`, `Get-Content .env`, `cat .env`, `type .env`, `Select-String .env` |
+#
+# 주의
+# - `prefix_rule`은 접두어만 비교하므로 `.env` 차단은 직접 읽기/출력 형태를 우선 막는다.
+# - Python 관련 변경은 현재 실행 가능 여부가 UNKNOWN이므로 별도 규칙으로 확장하지 않았다.
+
+prefix_rule(
+    pattern = ["git", ["status", "diff", "show", "log"]],
+    decision = "allow",
+    justification = "읽기 전용 git 확인은 승인 없이 허용한다.",
+)
+
+prefix_rule(
+    pattern = ["Get-ChildItem"],
+    decision = "allow",
+    justification = "프로젝트 트리 확인은 승인 없이 허용한다.",
+)
+
+prefix_rule(
+    pattern = ["Get-Content"],
+    decision = "allow",
+    justification = "프로젝트 파일 읽기는 허용하되, 아래의 `.env` 차단 규칙은 예외로 한다.",
+)
+
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+    justification = "읽기 전용 검색은 승인 없이 허용한다.",
+)
+
+prefix_rule(
+    pattern = ["git", ["add", "commit", "checkout", "switch", "merge", "rebase"]],
+    decision = "prompt",
+    justification = "git 상태를 바꾸는 명령은 사전 확인이 필요하다.",
+)
+
+prefix_rule(
+    pattern = [["npm", "npm.cmd"], ["install", "ci", "update", "run"]],
+    decision = "prompt",
+    justification = "패키지 설치와 스크립트 실행은 작업 공간을 변경할 수 있으므로 확인이 필요하다.",
+)
+
+prefix_rule(
+    pattern = [["rm", "rmdir", "del", "Remove-Item"]],
+    decision = "forbidden",
+    justification = "삭제 명령은 금지한다. 대신 `Get-ChildItem`이나 `git status` 같은 비파괴 명령을 사용한다.",
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "forbidden",
+    justification = "원격 push는 금지한다. 대신 로컬 커밋을 만들거나 명시적 검토를 요청한다.",
+)
+
+prefix_rule(
+    pattern = ["git", "remote", ["add", "set-url", "remove"]],
+    decision = "forbidden",
+    justification = "원격 저장소 설정 변경은 금지한다. 대신 로컬에서 원격 구성을 확인한다.",
+)
+
+prefix_rule(
+    pattern = [["Get-Content", "cat", "type", "Select-String"], ".env"],
+    decision = "forbidden",
+    justification = ".env 파일은 읽거나 출력하지 않는다. 대신 마스킹된 예시 파일이나 환경 변수 문서를 사용한다.",
+)
+
+# Stop hook auto-commit wrapper only
+prefix_rule(
+    pattern = ["py", "tools/hooks/auto_commit_index_html.py"],
+    decision = "allow",
+    justification = "Stop 훅에서 사용하는 index.html 자동 커밋 래퍼만 허용한다.",
+)
+
+prefix_rule(
+    pattern = ["python3", "tools/hooks/auto_commit_index_html.py"],
+    decision = "allow",
+    justification = "Stop 훅에서 사용하는 index.html 자동 커밋 래퍼만 허용한다.",
+)

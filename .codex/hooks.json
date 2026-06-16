@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 tools/hooks/auto_commit_index_html.py",
+            "commandWindows": "py tools/hooks/auto_commit_index_html.py",
+            "timeout": 600,
+            "statusMessage": "Auto commit index.html"
+          }
+        ]
+      }
+    ]
+  }
+}

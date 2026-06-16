@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CinePulse - 영화 추천 플랫폼</title>
+  <style>
+    :root {
+      --bg: #07080c;
+      --bg-2: #0f1118;
+      --panel: rgba(17, 20, 28, 0.82);
+      --panel-solid: #121521;
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f5f7fb;
+      --muted: #a7afbf;
+      --accent: #ff4d6d;
+      --accent-2: #ffb703;
+      --good: #49d17c;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --max-width: 1200px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 77, 109, 0.22), transparent 30%),
+        radial-gradient(circle at top right, rgba(255, 183, 3, 0.12), transparent 25%),
+        linear-gradient(180deg, #05060a 0%, #090b11 35%, #07080c 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page-shell {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .page-shell::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 75%);
+      pointer-events: none;
+      z-index: -2;
+    }
+
+    .wrap {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+      background: linear-gradient(180deg, rgba(6, 7, 11, 0.92), rgba(6, 7, 11, 0.66));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 76px;
+      padding: 14px 0;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 30% 30%, #ffb703, #ff4d6d 65%, #7b2cbf 100%);
+      box-shadow: 0 10px 30px rgba(255, 77, 109, 0.35);
+      font-size: 1.05rem;
+    }
+
+    .brand-name {
+      font-size: 1.05rem;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .nav a {
+      color: var(--muted);
+      font-size: 0.95rem;
+      transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn,
+    .primary-btn,
+    .ghost-btn {
+      border: 0;
+      cursor: pointer;
+      border-radius: 999px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+    }
+
+    .primary-btn,
+    .ghost-btn {
+      padding: 0.9rem 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .primary-btn {
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), #ff7b54);
+      box-shadow: 0 18px 32px rgba(255, 77, 109, 0.25);
+    }
+
+    .ghost-btn {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .icon-btn:hover,
+    .primary-btn:hover,
+    .ghost-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .hero {
+      position: relative;
+      padding: 30px 0 18px;
+    }
+
+    .hero-panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius-xl) + 6px);
+      background:
+        linear-gradient(120deg, rgba(8, 10, 16, 0.92), rgba(15, 17, 24, 0.76)),
+        radial-gradient(circle at 82% 18%, rgba(255, 183, 3, 0.18), transparent 20%),
+        radial-gradient(circle at 20% 20%, rgba(255, 77, 109, 0.2), transparent 24%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow);
+      min-height: 560px;
+      display: grid;
+      align-items: center;
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(8, 10, 16, 0.96) 0%, rgba(8, 10, 16, 0.72) 44%, rgba(8, 10, 16, 0.12) 100%),
+        linear-gradient(0deg, rgba(8, 10, 16, 0.86), transparent 45%);
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+      gap: 28px;
+      padding: 52px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.42rem 0.8rem;
+      width: fit-content;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffcf6d;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 18px 0 16px;
+      font-size: clamp(2.8rem, 6vw, 5.6rem);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      max-width: 10ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 60ch;
+      font-size: 1.02rem;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+      max-width: 560px;
+    }
+
+    .stat {
+      padding: 16px 18px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .hero-feature {
+      align-self: end;
+      justify-self: end;
+      width: min(100%, 340px);
+      padding: 18px;
+      border-radius: 26px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+        rgba(14, 16, 24, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+      position: relative;
+      z-index: 2;
+    }
+
+    .poster {
+      height: 410px;
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+      background-size: cover;
+      background-position: center;
+      background-image:
+        linear-gradient(180deg, rgba(7, 8, 12, 0.1) 0%, rgba(7, 8, 12, 0.88) 100%),
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.14), transparent 34%),
+        linear-gradient(135deg, #ff4d6d 0%, #14213d 40%, #0f172a 100%);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .poster::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 40% 28%, rgba(255, 255, 255, 0.24), transparent 18%),
+        radial-gradient(circle at 75% 24%, rgba(255, 183, 3, 0.5), transparent 12%),
+        radial-gradient(circle at 60% 52%, rgba(73, 209, 124, 0.16), transparent 16%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .poster-badge {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      padding: 0.5rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .poster h2 {
+      position: relative;
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+
+    .poster p {
+      position: relative;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .section {
+      padding: 28px 0 8px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(1.4rem, 2vw, 2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .section-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 58ch;
+    }
+
+    .section-link {
+      color: #ffcf6d;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .movie-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+      transform: translateY(0);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      min-height: 100%;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.42);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .movie-poster {
+      aspect-ratio: 3 / 4;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    .movie-poster::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(7, 8, 12, 0.2) 45%, rgba(7, 8, 12, 0.92) 100%);
+    }
+
+    .movie-body {
+      padding: 16px 16px 18px;
+    }
+
+    .movie-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #dce2ef;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .movie-title {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+      letter-spacing: -0.02em;
+    }
+
+    .movie-desc {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.92rem;
+    }
+
+    .genres {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .genre-card {
+      padding: 22px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+        rgba(15, 17, 24, 0.75);
+      box-shadow: var(--shadow);
+      transition: transform 0.24s ease, border-color 0.24s ease;
+    }
+
+    .genre-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .genre-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .genre-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(255, 77, 109, 0.95), rgba(255, 183, 3, 0.85));
+      box-shadow: 0 14px 28px rgba(255, 77, 109, 0.25);
+      font-size: 1.1rem;
+    }
+
+    .genre-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
+
+    .genre-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .genre-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .today-panel {
+      overflow: hidden;
+      border-radius: calc(var(--radius-xl) + 4px);
+      background:
+        linear-gradient(135deg, rgba(255, 77, 109, 0.16), rgba(255, 183, 3, 0.1) 45%, rgba(15, 17, 24, 0.98) 100%),
+        rgba(12, 14, 20, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+    }
+
+    .today-copy {
+      padding: 34px;
+    }
+
+    .today-copy h3 {
+      margin: 14px 0 14px;
+      font-size: clamp(1.6rem, 3vw, 2.6rem);
+      letter-spacing: -0.04em;
+    }
+
+    .today-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .today-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 22px 0 28px;
+    }
+
+    .score {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.7rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(73, 209, 124, 0.12);
+      color: #bff2ce;
+      border: 1px solid rgba(73, 209, 124, 0.18);
+      font-weight: 800;
+    }
+
+    .today-poster {
+      min-height: 100%;
+      padding: 24px;
+      display: flex;
+      align-items: flex-end;
+      background:
+        linear-gradient(180deg, transparent 0%, rgba(7, 8, 12, 0.16) 26%, rgba(7, 8, 12, 0.9) 100%),
+        radial-gradient(circle at 30% 20%, rgba(255, 183, 3, 0.22), transparent 26%),
+        radial-gradient(circle at 70% 28%, rgba(255, 77, 109, 0.28), transparent 22%),
+        linear-gradient(135deg, #1c2541 0%, #111827 48%, #020617 100%);
+    }
+
+    .today-card {
+      width: 100%;
+      max-width: 320px;
+      margin-left: auto;
+      border-radius: 24px;
+      padding: 18px;
+      background: rgba(13, 15, 22, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    .today-card .big-title {
+      margin: 0 0 10px;
+      font-size: 1.55rem;
+    }
+
+    .today-card .mini {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.94rem;
+    }
+
+    .footer {
+      padding: 42px 0 36px;
+      color: var(--muted);
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.08s; }
+    .delay-2 { animation-delay: 0.16s; }
+    .delay-3 { animation-delay: 0.24s; }
+    .delay-4 { animation-delay: 0.32s; }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .today-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-feature {
+        justify-self: start;
+      }
+
+      .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .genres {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .topbar-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav {
+        justify-content: flex-start;
+        gap: 14px;
+      }
+
+      .hero-panel {
+        min-height: auto;
+      }
+
+      .hero-grid {
+        padding: 28px 22px 24px;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.3rem, 11vw, 4rem);
+      }
+
+      .hero-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .movie-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .today-copy,
+      .today-poster {
+        padding: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#top" aria-label="CinePulse 홈으로 이동">
+          <span class="brand-mark">▶</span>
+          <span class="brand-name">CinePulse</span>
+        </a>
+
+        <nav class="nav" aria-label="주요 메뉴">
+          <a href="#popular">인기 영화</a>
+          <a href="#genres">장르 추천</a>
+          <a href="#today">오늘의 추천</a>
+          <a href="#footer">About</a>
+        </nav>
+
+        <div class="nav-actions">
+          <button class="icon-btn" type="button" aria-label="검색">⌕</button>
+          <button class="ghost-btn" type="button">로그인</button>
+          <button class="primary-btn" type="button">지금 보기</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="wrap hero-panel fade-in">
+          <div class="hero-grid">
+            <div>
+              <span class="eyebrow">Curated Movie Picks</span>
+              <h1>오늘 밤, 가장 잘 맞는 영화를 발견하세요.</h1>
+              <p>
+                CinePulse는 기분, 장르, 평점, 분위기까지 고려해 영화 추천을 제안하는 메인 허브입니다.
+                넷플릭스 감성의 집중형 배너와 고급스러운 카드 UI로 최신 인기작부터 취향 저격 작품까지
+                한 화면에서 빠르게 탐색할 수 있습니다.
+              </p>
+
+              <div class="hero-actions">
+                <button class="primary-btn" type="button">추천 시작하기</button>
+                <button class="ghost-btn" type="button">예고편 보기</button>
+              </div>
+
+              <div class="hero-stats" aria-label="서비스 요약">
+                <div class="stat">
+                  <strong>1,200+</strong>
+                  <span>선별된 작품</span>
+                </div>
+                <div class="stat">
+                  <strong>98%</strong>
+                  <span>맞춤 추천 만족도</span>
+                </div>
+                <div class="stat">
+                  <strong>24h</strong>
+                  <span>매일 갱신되는 리스트</span>
+                </div>
+              </div>
+            </div>
+
+            <aside class="hero-feature">
+              <div class="poster">
+                <div class="poster-badge">Hero Pick · Thriller</div>
+                <h2>Midnight Signal</h2>
+                <p>
+                  도심의 불면과 미스터리를 감각적으로 담아낸 스릴러. 어두운 톤과 강한 서스펜스로
+                  추천 플랫폼의 분위기를 가장 잘 보여주는 대표 타이틀입니다.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section id="popular" class="section">
+        <div class="wrap">
+          <div class="section-head fade-in delay-1">
+            <div>
+              <h2 class="section-title">인기 영화 카드</h2>
+              <p class="section-subtitle">
+                장르와 평점이 명확히 드러나는 카드형 구성으로, 사용자가 빠르게 작품을 비교하고 선택할 수 있도록 설계했습니다.
+              </p>
+            </div>
+            <a class="section-link" href="#genres">장르 추천으로 이동 →</a>
+          </div>
+
+          <div class="movie-grid">
+            <article class="movie-card fade-in delay-1">
+              <div class="movie-poster" style="background-image:
+                linear-gradient(180deg, rgba(7,8,12,0.04) 0%, rgba(7,8,12,0.94) 100%),
+                radial-gradient(circle at 35% 18%, rgba(255,77,109,0.28), transparent 28%),
+                linear-gradient(135deg, #202a44 0%, #0f172a 52%, #020617 100%);"></div>
+              <div class="movie-body">
+                <div class="movie-meta">
+                  <span class="pill">액션</span>
+                  <span class="pill">8.9</span>
+                  <span class="pill">128분</span>
+                </div>
+                <h3 class="movie-title">Neon Chase</h3>
+                <p class="movie-desc">도심 추격전과 감각적인 조명이 인상적인 액션 블록버스터. 몰입감 높은 편집과 강한 비주얼이 돋보입니다.</p>
+              </div>
+            </article>
+
+            <article class="movie-card fade-in delay-2">
+              <div class="movie-poster" style="background-image:
+                linear-gradient(180deg, rgba(7,8,12,0.08) 0%, rgba(7,8,12,0.94) 100%),
+                radial-gradient(circle at 28% 26%, rgba(255,183,3,0.3), transparent 24%),
+                linear-gradient(135deg, #322f70 0%, #0f172a 50%, #030712 100%);"></div>
+              <div class="movie-body">
+                <div class="movie-meta">
+                  <span class="pill">드라마</span>
+                  <span class="pill">9.2</span>
+                  <span class="pill">142분</span>
+                </div>
+                <h3 class="movie-title">Last Autumn Letter</h3>
+                <p class="movie-desc">계절의 변화와 관계의 온도를 섬세하게 다룬 감성 드라마. 여운이 깊게 남는 대사와 연출이 특징입니다.</p>
+              </div>
+            </article>
+
+            <article class="movie-card fade-in delay-3">
+              <div class="movie-poster" style="background-image:
+                linear-gradient(180deg, rgba(7,8,12,0.08) 0%, rgba(7,8,12,0.94) 100%),
+                radial-gradient(circle at 65% 24%, rgba(73,209,124,0.24), transparent 24%),
+                linear-gradient(135deg, #144552 0%, #0f172a 50%, #020617 100%);"></div>
+              <div class="movie-body">
+                <div class="movie-meta">
+                  <span class="pill">SF</span>
+                  <span class="pill">8.7</span>
+                  <span class="pill">136분</span>
+                </div>
+                <h3 class="movie-title">Orbit Zero</h3>
+                <p class="movie-desc">우주 탐사와 인간의 선택을 교차 편집으로 풀어낸 SF. 차갑고 고요한 화면 구성이 매력적입니다.</p>
+              </div>
+            </article>
+
+            <article class="movie-card fade-in delay-4">
+              <div class="movie-poster" style="background-image:
+                linear-gradient(180deg, rgba(7,8,12,0.08) 0%, rgba(7,8,12,0.94) 100%),
+                radial-gradient(circle at 68% 24%, rgba(255,255,255,0.2), transparent 26%),
+                linear-gradient(135deg, #4b2d73 0%, #1f2937 48%, #020617 100%);"></div>
+              <div class="movie-body">
+                <div class="movie-meta">
+                  <span class="pill">미스터리</span>
+                  <span class="pill">9.0</span>
+                  <span class="pill">118분</span>
+                </div>
+                <h3 class="movie-title">House of Echoes</h3>
+                <p class="movie-desc">낯선 공간에서 시작되는 심리 미스터리. 정교한 복선과 반전이 끝까지 긴장을 유지합니다.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="genres" class="section">
+        <div class="wrap">
+          <div class="section-head fade-in">
+            <div>
+              <h2 class="section-title">장르별 추천</h2>
+              <p class="section-subtitle">
+                각 장르를 짧은 요약과 태그로 분리해, 사용자가 취향 기반 탐색을 더 쉽게 할 수 있도록 구성했습니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="genres">
+            <article class="genre-card fade-in delay-1">
+              <div class="genre-top">
+                <div>
+                  <h3>스릴러</h3>
+                  <p>긴장감과 반전을 선호하는 사용자에게 적합한 몰입형 추천.</p>
+                </div>
+                <div class="genre-icon">✦</div>
+              </div>
+              <div class="genre-tags">
+                <span class="pill">서스펜스</span>
+                <span class="pill">미스터리</span>
+                <span class="pill">추적극</span>
+              </div>
+            </article>
+
+            <article class="genre-card fade-in delay-2">
+              <div class="genre-top">
+                <div>
+                  <h3>로맨스</h3>
+                  <p>감정선과 영상미를 강조한 작품을 중심으로 추천합니다.</p>
+                </div>
+                <div class="genre-icon">♡</div>
+              </div>
+              <div class="genre-tags">
+                <span class="pill">감성</span>
+                <span class="pill">힐링</span>
+                <span class="pill">청춘</span>
+              </div>
+            </article>
+
+            <article class="genre-card fade-in delay-3">
+              <div class="genre-top">
+                <div>
+                  <h3>SF</h3>
+                  <p>세계관 설계와 시각적 스케일이 뛰어난 작품을 모았습니다.</p>
+                </div>
+                <div class="genre-icon">⦿</div>
+              </div>
+              <div class="genre-tags">
+                <span class="pill">우주</span>
+                <span class="pill">미래</span>
+                <span class="pill">기술</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="today" class="section">
+        <div class="wrap">
+          <div class="section-head fade-in">
+            <div>
+              <h2 class="section-title">오늘의 추천 영화</h2>
+              <p class="section-subtitle">
+                현재 분위기와 가장 잘 맞는 단일 추천을 전면에 배치해, 사용자의 선택 피로를 줄이도록 설계했습니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="today-panel fade-in delay-1">
+            <div class="today-copy">
+              <span class="eyebrow">Today Pick</span>
+              <h3>Echo Runner</h3>
+              <p>
+                밤의 도시를 배경으로 기억과 진실을 추적하는 네오누아르 영화입니다. 세련된 색감,
+                빠른 리듬, 강한 사운드 디자인이 어우러져 메인 페이지의 핵심 추천으로 적합합니다.
+              </p>
+
+              <div class="today-meta">
+                <span class="pill">네오누아르</span>
+                <span class="pill">IMDb 9.1</span>
+                <span class="pill">Editor's Choice</span>
+                <span class="score">★ 4.8/5</span>
+              </div>
+
+              <button class="primary-btn" type="button">추천 상세 보기</button>
+            </div>
+
+            <div class="today-poster">
+              <div class="today-card">
+                <h4 class="big-title">밤을 달리는 기록자</h4>
+                <p class="mini">
+                  차갑고 깊은 톤의 비주얼, 감각적인 타이포, 그리고 긴장감을 살리는 카드형 정보 배치로
+                  추천 플랫폼의 메인 이미지를 강조합니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="wrap">
+        <div class="footer-inner">
+          <div>
+            <div class="brand" style="margin-bottom: 10px;">
+              <span class="brand-mark">▶</span>
+              <span class="brand-name">CinePulse</span>
+            </div>
+            <div>영화 추천 플랫폼 메인 페이지 데모 · <span id="footer-year"></span></div>
+          </div>
+
+          <div class="footer-links">
+            <a href="#popular">인기 영화</a>
+            <a href="#genres">장르별 추천</a>
+            <a href="#today">오늘의 추천</a>
+            <a href="#top">맨 위로</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const footerYear = document.getElementById('footer-year');
+    if (footerYear) {
+      footerYear.textContent = new Date().getFullYear();
+    }
+
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        button.animate(
+          [
+            { transform: 'translateY(0)' },
+            { transform: 'translateY(-3px)' },
+            { transform: 'translateY(0)' }
+          ],
+          { duration: 220, easing: 'ease-out' }
+        );
+      });
+    });
+  </script>
+</body>
+</html>
